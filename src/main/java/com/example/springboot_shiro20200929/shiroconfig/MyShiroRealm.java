@@ -7,6 +7,7 @@ import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.SimpleAuthenticationInfo;
 import org.apache.shiro.authz.AuthorizationInfo;
+import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
 
@@ -48,8 +49,14 @@ public class MyShiroRealm extends AuthorizingRealm {
 
         principalCollection.getPrimaryPrincipal();
 
+        //添加角色和权限
+        SimpleAuthorizationInfo authorizationInfo = new SimpleAuthorizationInfo();
 
-        return null;
+//            authorizationInfo.addRole("shop");
+            authorizationInfo.addStringPermission("shop1");//权限
+
+        return authorizationInfo;
+
     }
 
     
