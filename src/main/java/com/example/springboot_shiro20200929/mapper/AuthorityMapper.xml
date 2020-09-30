@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.springboot_shiro20200929.mapper.AuthorityMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.example.springboot_shiro20200929.bean.Authority">
+        <id column="authority_id" property="authorityId" />
+        <result column="authority_name" property="authorityName" />
+        <result column="resource_name" property="resourceName" />
+        <result column="resource_url" property="resourceUrl" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        authority_id, authority_name, resource_name, resource_url
+    </sql>
+
+</mapper>
