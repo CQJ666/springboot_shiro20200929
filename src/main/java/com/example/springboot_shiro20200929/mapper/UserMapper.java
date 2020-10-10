@@ -2,6 +2,7 @@ package com.example.springboot_shiro20200929.mapper;
 
 import com.example.springboot_shiro20200929.bean.User;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Select;
 
 /**
  * <p>
@@ -13,4 +14,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  */
 public interface UserMapper extends BaseMapper<User> {
 
+
+    @Select("select * from user where user_mobile=#{userMobile}")
+    User queryByUserMobile (String userMobile);
 }

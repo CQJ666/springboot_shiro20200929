@@ -1,7 +1,13 @@
 package com.example.springboot_shiro20200929.shiroconfig;
 
 import com.example.springboot_shiro20200929.bean.AuthTokenVo;
+import com.example.springboot_shiro20200929.bean.Authority;
+import com.example.springboot_shiro20200929.bean.Role;
 import com.example.springboot_shiro20200929.bean.User;
+import com.example.springboot_shiro20200929.jwtutils.JWTUtil;
+import com.example.springboot_shiro20200929.mapper.RoleAuthorityMapper;
+import com.example.springboot_shiro20200929.mapper.UserMapper;
+import com.example.springboot_shiro20200929.mapper.UserRoleMapper;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
@@ -13,13 +19,21 @@ import org.apache.shiro.subject.PrincipalCollection;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.ObjectUtils;
 
 import javax.annotation.Resource;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class MyShiroRealm extends AuthorizingRealm {
     private static Logger logger= LoggerFactory.getLogger(AuthorizingRealm.class);
-
-
+    @Resource
+    UserMapper userMapper;
+    @Resource
+    UserRoleMapper userRoleMapper;
+    @Resource
+    RoleAuthorityMapper roleAuthorityMapper;
 
     /**
      * 重写，绕过身份令牌异常导致的shiro报错
@@ -45,16 +59,13 @@ public class MyShiroRealm extends AuthorizingRealm {
     protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principalCollection) {
         logger.info("执行doGetAuthorizationInfo方法------授权");
         //1  获取主体信息  2根据用户信息去查角色
-
-
-        principalCollection.getPrimaryPrincipal();
-
+        //获取用户登录信息
+        User user = (User)principalCollection.getPrimaryPrincipal();
+        List<Role> listRole=userRoleMapper.queryByUserIdListRole(user.getUserId());
+        List<String> listAuthority= roleAuthorityMapper.queryByUserIdListAuthority(user.getUserId());
         //添加角色和权限
         SimpleAuthorizationInfo authorizationInfo = new SimpleAuthorizationInfo();
-
-//            authorizationInfo.addRole("shop");
-            authorizationInfo.addStringPermission("shop1");//权限
-
+        authorizationInfo.addStringPermissions(listAuthority);//权限
         return authorizationInfo;
 
     }
@@ -71,13 +82,20 @@ public class MyShiroRealm extends AuthorizingRealm {
     protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken authenticationToken) throws AuthenticationException {
         logger.info("执行doGetAuthenticationInfo方法------认证");
         //authenticationToken  主体传过来的信息
-        String password=(String) authenticationToken.getPrincipal();
-        String userMobile=(String) authenticationToken.getPrincipal();
-        logger.info(password+userMobile+"数据信息");
+        //获得token
+        String token = (String)authenticationToken.getCredentials();
+        String userMobile = JWTUtil.getUserMobile(token);
+        User user=userMapper.queryByUserMobile(userMobile);
+        if (ObjectUtils.isEmpty(user))return  new SimpleAuthenticationInfo();
+        if (!JWTUtil.verify(token,userMobile,user.getPassword())){
+            throw new AuthenticationException("token过期");
+        }
+
         SimpleAuthenticationInfo authenticationInfo = new SimpleAuthenticationInfo(
-                password,
-                userMobile,
+                user,
+                token,
                 getName());
+        System.out.println(authenticationInfo);
         return authenticationInfo;
         //拿到信息去数据库 获取凭证
 //        User user=getUserBypasswordoruserMobile(userMobile,password);
