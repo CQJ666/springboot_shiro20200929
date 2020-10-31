@@ -1,13 +1,13 @@
 package com.example.springboot_shiro20200929.shiroconfig;
 
-import com.example.springboot_shiro20200929.bean.AuthTokenVo;
-import com.example.springboot_shiro20200929.bean.Authority;
-import com.example.springboot_shiro20200929.bean.Role;
-import com.example.springboot_shiro20200929.bean.User;
+import com.example.springboot_shiro20200929.bean.constant.AuthTokenVo;
+import com.example.springboot_shiro20200929.bean.entity.Admin;
+import com.example.springboot_shiro20200929.bean.entity.AdminRole;
+import com.example.springboot_shiro20200929.bean.entity.Role;
 import com.example.springboot_shiro20200929.jwtutils.JWTUtil;
-import com.example.springboot_shiro20200929.mapper.RoleAuthorityMapper;
-import com.example.springboot_shiro20200929.mapper.UserMapper;
-import com.example.springboot_shiro20200929.mapper.UserRoleMapper;
+import com.example.springboot_shiro20200929.mapper.AdminMapper;
+import com.example.springboot_shiro20200929.mapper.PermMapper;
+import com.example.springboot_shiro20200929.mapper.RoleMapper;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
@@ -22,18 +22,16 @@ import org.slf4j.LoggerFactory;
 import org.springframework.util.ObjectUtils;
 
 import javax.annotation.Resource;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 public class MyShiroRealm extends AuthorizingRealm {
     private static Logger logger= LoggerFactory.getLogger(AuthorizingRealm.class);
     @Resource
-    UserMapper userMapper;
+    AdminMapper adminMapper;
     @Resource
-    UserRoleMapper userRoleMapper;
+    RoleMapper roleMapper;
     @Resource
-    RoleAuthorityMapper roleAuthorityMapper;
+    PermMapper permMapper;
 
     /**
      * 重写，绕过身份令牌异常导致的shiro报错
@@ -60,17 +58,17 @@ public class MyShiroRealm extends AuthorizingRealm {
         logger.info("执行doGetAuthorizationInfo方法------授权");
         //1  获取主体信息  2根据用户信息去查角色
         //获取用户登录信息
-        User user = (User)principalCollection.getPrimaryPrincipal();
-        List<Role> listRole=userRoleMapper.queryByUserIdListRole(user.getUserId());
-        List<String> listAuthority= roleAuthorityMapper.queryByUserIdListAuthority(user.getUserId());
+        Admin admin = (Admin)principalCollection.getPrimaryPrincipal();
+//        List<Role> listRole=roleMapper.queryByAdminIdListRole(admin.getAdminId());//根据用户id去查询角色
+        List<String> listperm= permMapper.queryByUserIdListperm(admin.getAdminId());
         //添加角色和权限
         SimpleAuthorizationInfo authorizationInfo = new SimpleAuthorizationInfo();
-        authorizationInfo.addStringPermissions(listAuthority);//权限
+        authorizationInfo.addStringPermissions(listperm);//权限
         return authorizationInfo;
 
     }
 
-    
+
     /*
     * @Description: 这个方法  主要用于认证
     * @Param: [authenticationToken]
@@ -84,15 +82,15 @@ public class MyShiroRealm extends AuthorizingRealm {
         //authenticationToken  主体传过来的信息
         //获得token
         String token = (String)authenticationToken.getCredentials();
-        String userMobile = JWTUtil.getUserMobile(token);
-        User user=userMapper.queryByUserMobile(userMobile);
-        if (ObjectUtils.isEmpty(user))return  new SimpleAuthenticationInfo();
-        if (!JWTUtil.verify(token,userMobile,user.getPassword())){
+        String userName = JWTUtil.getUserName(token);
+        Admin admin=adminMapper.queryByUserName(userName);
+        if (ObjectUtils.isEmpty(admin))return  new SimpleAuthenticationInfo();
+        if (!JWTUtil.verify(token,userName,admin.getPassword())){
             throw new AuthenticationException("token过期");
         }
 
         SimpleAuthenticationInfo authenticationInfo = new SimpleAuthenticationInfo(
-                user,
+                admin,
                 token,
                 getName());
         System.out.println(authenticationInfo);
@@ -102,7 +100,7 @@ public class MyShiroRealm extends AuthorizingRealm {
 
     }
 
-    
+
     /*
     * @Description: 去数据库中获取信息
     * @Param: [userMobile, password]

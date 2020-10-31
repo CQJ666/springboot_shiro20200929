@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.springboot_shiro20200929.mapper.PermMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.example.springboot_shiro20200929.bean.entity.Perm">
+        <id column="perm_id" property="permId" />
+        <result column="perm_name" property="permName" />
+        <result column="perm_value" property="permValue" />
+        <result column="perm_desc" property="permDesc" />
+        <result column="resource" property="resource" />
+        <result column="interface_url" property="interfaceUrl" />
+        <result column="parent_id" property="parentId" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        perm_id, perm_name, perm_value, perm_desc, resource, interface_url, parent_id
+    </sql>
+
+</mapper>

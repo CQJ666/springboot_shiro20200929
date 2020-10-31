@@ -27,11 +27,11 @@ public class JWTUtil {
      * @param secret 用户的密码
      * @return 是否正确
      */
-    public static boolean verify(String token, String usermobile, String secret) {
+    public static boolean verify(String token, String username, String secret) {
         try {
             Algorithm algorithm = Algorithm.HMAC256(secret);
             JWTVerifier verifier = JWT.require(algorithm)
-                    .withClaim("usermobile", usermobile)
+                    .withClaim("username", username)
                     .build();
             DecodedJWT jwt = verifier.verify(token);
             return true;
@@ -44,10 +44,10 @@ public class JWTUtil {
      * 获得token中的信息无需secret解密也能获得
      * @return token中包含的用户名
      */
-    public static String getUserMobile(String token) {
+    public static String getUserName(String token) {
         try {
             DecodedJWT jwt = JWT.decode(token);
-            return jwt.getClaim("usermobile").asString();
+            return jwt.getClaim("username").asString();
         } catch (JWTDecodeException e) {
             return null;
         }
@@ -55,17 +55,17 @@ public class JWTUtil {
 
     /**
      * 生成签名,5min后过期
-     * @param usermobile 用户账号
+     * @param username 用户账号
      * @param secret 用户的密码
      * @return 加密的token
      */
-    public static String sign(String usermobile, String secret) {
+    public static String sign(String username, String secret) {
         try {
             Date date = new Date(System.currentTimeMillis()+EXPIRE_TIME);
             Algorithm algorithm = Algorithm.HMAC256(secret);
             // 附带username信息
             return JWT.create()
-                    .withClaim("usermobile", usermobile)
+                    .withClaim("username", username)
                     .withExpiresAt(date)
                     .sign(algorithm);
         } catch (IllegalArgumentException e) {

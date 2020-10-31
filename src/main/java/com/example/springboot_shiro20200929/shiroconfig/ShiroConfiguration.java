@@ -1,6 +1,5 @@
 package com.example.springboot_shiro20200929.shiroconfig;
 
-import org.apache.shiro.realm.Realm;
 import org.apache.shiro.spring.LifecycleBeanPostProcessor;
 import org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor;
 import org.apache.shiro.spring.web.ShiroFilterFactoryBean;
@@ -41,12 +40,12 @@ public class ShiroConfiguration {
         //自定义过滤器链
         Map<String, javax.servlet.Filter> filters = new HashMap<>();
         //指定拦截器处理
-        filters.put("auth", new com.example.springboot_shiro20200929.shiroconfig.CustomFilter());
+        filters.put("auth", new MyFilter());
         shiroFilterFactoryBean.setFilters(filters);
         Map<String, String> filterMap = new LinkedHashMap<>();
 
         //登录请求不拦截
-        filterMap.put("/user/login", "anon");
+        filterMap.put("/admin/login", "anon");
         //登录页面需要用到的接口，不拦截
         filterMap.put("/user/fetchCurrentUser", "anon");
         //拦截所有接口请求，做权限判断
