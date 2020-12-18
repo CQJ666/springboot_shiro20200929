@@ -2,7 +2,7 @@ package com.example.springboot_shiro20200929.service.impl;
 
 import com.example.springboot_shiro20200929.bean.constant.ReturnMessage;
 import com.example.springboot_shiro20200929.bean.entity.Admin;
-import com.example.springboot_shiro20200929.jwtutils.JWTUtil;
+import com.example.springboot_shiro20200929.jwtutils.JwtUtils;
 import com.example.springboot_shiro20200929.mapper.AdminMapper;
 import com.example.springboot_shiro20200929.service.AdminService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -35,7 +35,8 @@ public class AdminServiceImpl extends ServiceImpl<AdminMapper, Admin> implements
         String salt=admin.getSalt();
         String cryptPassword= Md5Crypt.apr1Crypt(password, salt);
         if (cryptPassword.equals(admin.getPassword())){
-            String token = JWTUtil.sign(userName, cryptPassword);
+//            String token = JWTUtil.sign(userName, cryptPassword);
+            String token= JwtUtils.createJWT(String.valueOf(admin.getAdminId()));
             return ReturnMessage.success().add("token", token);
         }
         return ReturnMessage.failWithMsg("用户名或密码错误");

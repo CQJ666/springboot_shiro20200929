@@ -89,7 +89,7 @@ public class AdminController {
     @RequestMapping("/login")
     @ResponseBody
     public ReturnMessage userLogin(@RequestBody Map<String,Object> map){
-        String adminName= map.get("adminName").toString();//职位
+        String adminName= map.get("adminName").toString();//
         String password= map.get("password").toString();//
         if (StringUtils.isEmpty(adminName) || StringUtils.isEmpty(password))return  ReturnMessage.failWithMsg("用户名或密码不能为空");
         return adminService.userlogin(adminName,password);

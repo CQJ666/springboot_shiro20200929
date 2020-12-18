@@ -1,5 +1,7 @@
 package com.example.springboot_shiro20200929.shiroconfig;
 
+import org.apache.shiro.mgt.DefaultSessionStorageEvaluator;
+import org.apache.shiro.mgt.DefaultSubjectDAO;
 import org.apache.shiro.spring.LifecycleBeanPostProcessor;
 import org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor;
 import org.apache.shiro.spring.web.ShiroFilterFactoryBean;
@@ -60,6 +62,14 @@ public class ShiroConfiguration {
     @Bean
     public DefaultWebSecurityManager securityManager() {
         DefaultWebSecurityManager securityManager = new DefaultWebSecurityManager();
+        // 关闭自带session
+        DefaultSessionStorageEvaluator evaluator = new DefaultSessionStorageEvaluator();
+        evaluator.setSessionStorageEnabled(false);
+
+        DefaultSubjectDAO subjectDAO = new DefaultSubjectDAO();
+        subjectDAO.setSessionStorageEvaluator(evaluator);
+        securityManager.setSubjectDAO(subjectDAO);
+
         securityManager.setRealm(userRealm());
         return securityManager;
     }

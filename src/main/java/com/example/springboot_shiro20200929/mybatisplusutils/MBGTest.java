@@ -22,7 +22,6 @@ public class MBGTest {
 //        String[] tableNames = {"admin","role","perm","admin_role","role_perm"};
         String[] tableNames = {"aa"};
         for (String tableName:tableNames) {
-
             this.generate(packagePath,tableName);
         }
     }
@@ -61,7 +60,7 @@ public class MBGTest {
 //                .setTablePrefix("tbl_")				// 表前缀
                 .setInclude(tableName); 		// 生成的表
 
-        // 包名配置
+        // 包名配置（自定义包名）
         PackageConfig packageConfig = new PackageConfig();
         packageConfig.setParent(packagePath) 	// 所有包的父包
                 .setEntity("bean")				// 实体类包
@@ -70,6 +69,7 @@ public class MBGTest {
                 .setService("service")			// service文件
                 .setServiceImpl("service.impl")// serviceImpl文件
                 .setController("controller");	// controller层的包
+
 //        TemplateConfig templateConfig = new TemplateConfig();
 //        templateConfig.setService(null);
 //        templateConfig.setController(null);

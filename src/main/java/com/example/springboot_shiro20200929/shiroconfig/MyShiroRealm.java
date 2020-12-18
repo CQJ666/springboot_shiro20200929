@@ -1,17 +1,12 @@
 package com.example.springboot_shiro20200929.shiroconfig;
 
-import com.example.springboot_shiro20200929.bean.constant.AuthTokenVo;
 import com.example.springboot_shiro20200929.bean.entity.Admin;
-import com.example.springboot_shiro20200929.bean.entity.AdminRole;
-import com.example.springboot_shiro20200929.bean.entity.Role;
-import com.example.springboot_shiro20200929.jwtutils.JWTUtil;
+
+import com.example.springboot_shiro20200929.jwtutils.JwtUtils;
 import com.example.springboot_shiro20200929.mapper.AdminMapper;
 import com.example.springboot_shiro20200929.mapper.PermMapper;
 import com.example.springboot_shiro20200929.mapper.RoleMapper;
-import org.apache.shiro.authc.AuthenticationException;
-import org.apache.shiro.authc.AuthenticationInfo;
-import org.apache.shiro.authc.AuthenticationToken;
-import org.apache.shiro.authc.SimpleAuthenticationInfo;
+import org.apache.shiro.authc.*;
 import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.realm.AuthorizingRealm;
@@ -40,7 +35,7 @@ public class MyShiroRealm extends AuthorizingRealm {
      */
     @Override
     public boolean supports(AuthenticationToken authenticationToken){
-        return authenticationToken instanceof AuthTokenVo;
+        return authenticationToken instanceof JWTToken;
     }
 
 
@@ -58,9 +53,11 @@ public class MyShiroRealm extends AuthorizingRealm {
         logger.info("执行doGetAuthorizationInfo方法------授权");
         //1  获取主体信息  2根据用户信息去查角色
         //获取用户登录信息
-        Admin admin = (Admin)principalCollection.getPrimaryPrincipal();
+        Long  adminId = JwtUtils.getUserId(principalCollection.toString());
+//        Admin admin=adminMapper.selectById(userId);
 //        List<Role> listRole=roleMapper.queryByAdminIdListRole(admin.getAdminId());//根据用户id去查询角色
-        List<String> listperm= permMapper.queryByUserIdListperm(admin.getAdminId());
+
+        List<String> listperm= permMapper.queryByUserIdListperm(adminId);
         //添加角色和权限
         SimpleAuthorizationInfo authorizationInfo = new SimpleAuthorizationInfo();
         authorizationInfo.addStringPermissions(listperm);//权限
@@ -79,38 +76,29 @@ public class MyShiroRealm extends AuthorizingRealm {
     @Override
     protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken authenticationToken) throws AuthenticationException {
         logger.info("执行doGetAuthenticationInfo方法------认证");
-        //authenticationToken  主体传过来的信息
-        //获得token
-        String token = (String)authenticationToken.getCredentials();
-        String userName = JWTUtil.getUserName(token);
-        Admin admin=adminMapper.queryByUserName(userName);
-        if (ObjectUtils.isEmpty(admin))return  new SimpleAuthenticationInfo();
-        if (!JWTUtil.verify(token,userName,admin.getPassword())){
-            throw new AuthenticationException("token过期");
+        String token = (String) authenticationToken.getCredentials();
+        //从token中获取用户名
+        Long userId = JwtUtils.getUserId(token);
+        //获取数据库中存取的用户，密码是加密后的
+        Admin admin = adminMapper.selectById(userId);
+        if (admin != null) {
+            //
+            if (JwtUtils.isExpiration(token)) {
+                throw new IncorrectCredentialsException();
+            }
+            return new SimpleAuthenticationInfo(token, token, getName());
+        } else {
+            throw new UnknownAccountException();
         }
-
-        SimpleAuthenticationInfo authenticationInfo = new SimpleAuthenticationInfo(
-                admin,
-                token,
-                getName());
-        System.out.println(authenticationInfo);
-        return authenticationInfo;
-        //拿到信息去数据库 获取凭证
-//        User user=getUserBypasswordoruserMobile(userMobile,password);
-
     }
 
+    @Override
+    public  boolean isPermitted(PrincipalCollection principals, String permission){
+        logger.info("判断权限-----------------------------------------");
+        Long  adminId = JwtUtils.getUserId(principals.toString());
+        Admin admin = adminMapper.selectById(adminId);
+        if (ObjectUtils.isEmpty(admin))return false;
+        return admin.getAdminName().equals("admin")||super.isPermitted(principals,permission);
+    }
 
-    /*
-    * @Description: 去数据库中获取信息
-    * @Param: [userMobile, password]
-    * @return: com.example.springboot_shiro20200929.bean.User
-    * @Author: 王飞
-    * @Date: 2020/9/29 15:41
-    **/
-//    private User getUserBypasswordoruserMobile(String userMobile,String password){
-//        User user=new User();
-//        return user;
-//
-//    }
 }
