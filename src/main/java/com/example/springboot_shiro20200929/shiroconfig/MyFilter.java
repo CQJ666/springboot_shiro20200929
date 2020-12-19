@@ -1,10 +1,14 @@
 package com.example.springboot_shiro20200929.shiroconfig;
 
+import com.example.springboot_shiro20200929.exceptionHandler.SendFailMessage;
+import com.example.springboot_shiro20200929.jwtutils.JwtUtils;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authz.AuthorizationException;
+import org.apache.shiro.authz.UnauthorizedException;
 import org.apache.shiro.web.filter.authc.BasicHttpAuthenticationFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.ObjectUtils;
 
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -84,23 +88,17 @@ public class MyFilter extends BasicHttpAuthenticationFilter {
 
     @Override
     protected boolean isAccessAllowed(ServletRequest request, ServletResponse response, Object mappedValue) {
-
-//            try {
         try {
-            executeLogin(request, response);
+            return executeLogin(request, response);
         } catch (Exception e) {
-            e.printStackTrace();
+            if (e instanceof UnauthorizedException) {
+                SendFailMessage.sendMessage(400,"您没有此权限",response);
+                return false;
+            }else {
+                SendFailMessage.sendMessage(400,"其他错误",response);
+                return false;
+            }
         }
-//            } catch (Exception e) {
-//                if (e instanceof AuthorizationException) {
-//                    throw new AuthorizationException("访问资源权限不足！");
-////                } else {
-////                    //token 异常 认证失败
-////                    throw new AuthenticationException("token 异常 认证失败");
-//                }
-//            }
-
-        return true;
     }
 
 //    //这里通过判断请求的请求头中是否存在token，没有return false，直接进入控制器，校验成功返回token到前端，前端拿到token后，下次非登录请求就需要携带token
@@ -116,6 +114,14 @@ public class MyFilter extends BasicHttpAuthenticationFilter {
     protected boolean executeLogin(ServletRequest request, ServletResponse response) throws Exception {
         HttpServletRequest req = (HttpServletRequest) request;
         String header = req.getHeader("token");
+        if (ObjectUtils.isEmpty(header)){
+            SendFailMessage.sendMessage(401,"token为空",response);
+            return  false;
+        }
+        if (JwtUtils.isExpiration(header)){
+            SendFailMessage.sendMessage(402,"token已过期",response);
+            return false;
+        }
         JWTToken token = new JWTToken(header);
         getSubject(request, response).login(token);
         return true;
